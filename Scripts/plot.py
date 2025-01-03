@@ -1,5 +1,7 @@
 import logging
+import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 class Plot:
     def __init__(self):
@@ -92,3 +94,326 @@ class Plot:
         
         plt.tight_layout()
         plt.show()
+        
+    def plot_for_holiday_effect(self, df):
+        # Visualize sales trends across holidays
+        plt.figure(figsize=(12, 6))
+        df.groupby('InferredHoliday')['Sales'].mean().sort_values().plot(
+            kind='bar', color='skyblue', edgecolor='black'
+        )
+        plt.title('Average Sales by Inferred Holiday Period', fontsize=14)
+        plt.xlabel('Holiday Period', fontsize=12)
+        plt.ylabel('Average Sales', fontsize=12)
+        plt.xticks(rotation=45)
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.show()
+    
+    def plot_seasonal_trends_line(self, df):
+        # Ensure Date is in datetime format
+        df['Date'] = pd.to_datetime(df['Date'])
+        
+        # Group by Date to compute daily total sales
+        daily_sales = df.groupby('Date')['Sales'].sum().reset_index()
+        
+        # Plot the time series
+        plt.figure(figsize=(14, 6))
+        plt.plot(daily_sales['Date'], daily_sales['Sales'], label='Sales', color='blue', linewidth=1.5)
+        plt.title('Seasonal Trends Over Time', fontsize=14)
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Total Sales', fontsize=12)
+        plt.grid(alpha=0.5)
+        plt.legend()
+        plt.show()
+
+    def plot_seasonal_trends_box(self,df):
+        # Ensure Date is in datetime format
+        df['Date'] = pd.to_datetime(df['Date'])
+        
+        # Assign inferred holidays
+        df['InferredHoliday'] = df['Date'].apply(lambda x: 'Christmas' if x.month == 12 else 
+                                                ('Easter' if x.month in [3, 4] else 
+                                                ('New Year' if x.month in [1, 2] else 
+                                                ('Summer' if x.month in [6, 7, 8] else 'Normal'))))
+        
+        # Create a box plot
+        plt.figure(figsize=(12, 6))
+        sns.boxplot(x='InferredHoliday', y='Sales', data=df, palette='Set2')
+        plt.title('Sales Distribution by Inferred Holiday Period', fontsize=14)
+        plt.xlabel('Holiday Period', fontsize=12)
+        plt.ylabel('Sales', fontsize=12)
+        plt.xticks(rotation=45)
+        plt.grid(alpha=0.5)
+        plt.show()
+
+    def plot_seasonal_trends_heatmap(self, df):
+        # Ensure Date is in datetime format
+        df['Date'] = pd.to_datetime(df['Date'])
+        
+        # Extract month and day of the week
+        df['Month'] = df['Date'].dt.month
+        df['DayOfWeek'] = df['Date'].dt.dayofweek  # 0 = Monday, 6 = Sunday
+        
+        # Create a pivot table for heatmap
+        pivot_table = df.pivot_table(
+            values='Sales', 
+            index='Month', 
+            columns='DayOfWeek', 
+            aggfunc='mean'
+        )
+        
+        # Plot the heatmap
+        plt.figure(figsize=(12, 6))
+        sns.heatmap(pivot_table, annot=True, fmt='.0f', cmap='YlGnBu', cbar=True)
+        plt.title('Average Sales by Month and Day of the Week', fontsize=14)
+        plt.xlabel('Day of the Week', fontsize=12)
+        plt.ylabel('Month', fontsize=12)
+        plt.xticks(ticks=np.arange(7)+0.5, labels=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], rotation=45)
+        plt.show()
+
+    
+    def plot_seasonal_trends_subplots(self, df):
+        # Ensure Date is in datetime format
+        df['Date'] = pd.to_datetime(df['Date'])
+        
+        # Assign inferred holidays
+        df['InferredHoliday'] = df['Date'].apply(lambda x: 'Christmas' if x.month == 12 else 
+                                                ('Easter' if x.month in [3, 4] else 
+                                                ('New Year' if x.month in [1, 2] else 
+                                                ('Summer' if x.month in [6, 7, 8] else 'Normal'))))
+        
+        # Aggregate sales by holiday
+        holiday_sales = df.groupby(['InferredHoliday', 'Date'])['Sales'].sum().reset_index()
+        
+        # Get unique holidays
+        holidays = holiday_sales['InferredHoliday'].unique()
+        
+        # Create subplots
+        fig, axes = plt.subplots(nrows=len(holidays), figsize=(12, 6 * len(holidays)))
+        
+        for i, holiday in enumerate(holidays):
+            holiday_data = holiday_sales[holiday_sales['InferredHoliday'] == holiday]
+            axes[i].bar(holiday_data['Date'], holiday_data['Sales'], color='skyblue')
+            axes[i].set_title(f'Sales Trends During {holiday}', fontsize=14)
+            axes[i].set_xlabel('Date', fontsize=12)
+            axes[i].set_ylabel('Sales', fontsize=12)
+            axes[i].grid(alpha=0.5)
+        
+        plt.tight_layout()
+        plt.show()
+        
+    def plot_sales_vs_customers(self, df):
+        self.logger.info("Starting to promotion Analysis on sales")
+        # Scatter plot
+        plt.figure(figsize=(8, 6))
+        plt.scatter(df['Customers'], df['Sales'], alpha=0.5, color='skyblue')
+        plt.title('Sales vs. Number of Customers', fontsize=14)
+        plt.xlabel('Number of Customers', fontsize=12)
+        plt.ylabel('Sales', fontsize=12)
+        plt.grid(alpha=0.5)
+        plt.show()
+    def plot_sales_comparison(self, df):
+        self.logger.info("Starting plotting promotion Analysis on sales")
+        promo_sales = df[df['Promo'] == 1]['Sales'].mean()
+        non_promo_sales = df[df['Promo'] == 0]['Sales'].mean()
+        
+        plt.figure(figsize=(8, 6))
+        plt.bar(['With Promo', 'Without Promo'], [promo_sales, non_promo_sales], color=['teal', 'skyblue'])
+        plt.title('Average Sales with and without Promotions', fontsize=14)
+        plt.ylabel('Average Sales', fontsize=12)
+        plt.show()
+        self.logger.info("Successfully plotting promotion Analysis on sales")
+    def plot_customer_comparison(self,df):
+        self.logger.info("Starting plotting promotion Analysis on Customers")
+        promo_customers = df[df['Promo'] == 1]['Customers'].mean()
+        non_promo_customers = df[df['Promo'] == 0]['Customers'].mean()
+        
+        plt.figure(figsize=(8, 6))
+        plt.bar(['With Promo', 'Without Promo'], [promo_customers, non_promo_customers], color=['orange', 'purple'])
+        plt.title('Average Customers with and without Promotions', fontsize=14)
+        plt.ylabel('Average Customers', fontsize=12)
+        plt.show()
+        self.logger.info("Successfully plotting promotion Analysis on Customers")
+    
+    def plot_sales_per_customer_comparison(self, df):
+        self.logger.info("Starting plotting promotion Analysis on Sales vs Customers")
+        df['Sales_per_Customer'] = df['Sales'] / df['Customers']
+        promo_spc = df[df['Promo'] == 1]['Sales_per_Customer'].mean()
+        non_promo_spc = df[df['Promo'] == 0]['Sales_per_Customer'].mean()
+        
+        plt.figure(figsize=(8, 6))
+        plt.bar(['With Promo', 'Without Promo'], [promo_spc, non_promo_spc], color=['cyan', 'red'])
+        plt.title('Sales per Customer with and without Promotions', fontsize=14)
+        plt.ylabel('Sales per Customer', fontsize=12)
+        plt.show()
+        self.logger.info("Successfully plotting promotion Analysis on Sales vs Customers")
+    
+    def plot_time_series(self, df):
+        self.logger.info("Starting plotting promotion Analysis Sales Over Time")
+        df['Date'] = pd.to_datetime(df['Date'])
+        promo_sales = df[df['Promo'] == 1].groupby('Date')['Sales'].mean()
+        non_promo_sales = df[df['Promo'] == 0].groupby('Date')['Sales'].mean()
+        
+        plt.figure(figsize=(12, 6))
+        plt.plot(promo_sales, label='With Promo', color='green', alpha=0.7)
+        plt.plot(non_promo_sales, label='Without Promo', color='blue', alpha=0.7)
+        plt.title('Sales Over Time: With and Without Promotions', fontsize=14)
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Average Sales', fontsize=12)
+        plt.legend()
+        plt.grid(alpha=0.5)
+        plt.show()
+        self.logger.info("Successfully plotting promotion Analysis Sales Over Time")
+
+    # Plot PCA explained variance
+    def plot_explained_variance(self, pca):
+        self.logger.info("Starting PCA plotting")
+        plt.figure(figsize=(8, 6))
+        plt.plot(np.cumsum(pca.explained_variance_ratio_), marker='o', linestyle='--')
+        plt.title('Explained Variance by PCA Components', fontsize=14)
+        plt.xlabel('Number of Components', fontsize=12)
+        plt.ylabel('Cumulative Explained Variance', fontsize=12)
+        plt.grid(alpha=0.5)
+        plt.show()
+        self.logger.info("Successfully PCA plotting")
+    
+    # PCA Biplot
+    def plot_pca_biplot(self, pca_result, pca, feature_names):
+        self.logger.info("Starting PCA Variance plotting")
+        plt.figure(figsize=(10, 8))
+        plt.scatter(pca_result[:, 0], pca_result[:, 1], alpha=0.5, c='blue', edgecolor='k')
+        plt.title('PCA Biplot', fontsize=14)
+        plt.xlabel('Principal Component 1', fontsize=12)
+        plt.ylabel('Principal Component 2', fontsize=12)
+        
+        # Add feature vectors
+        for i, feature in enumerate(feature_names):
+            plt.arrow(0, 0, pca.components_[0, i] * max(pca_result[:, 0]), 
+                    pca.components_[1, i] * max(pca_result[:, 1]), 
+                    color='red', alpha=0.8, head_width=0.05)
+            plt.text(pca.components_[0, i] * max(pca_result[:, 0]) * 1.1, 
+                    pca.components_[1, i] * max(pca_result[:, 1]) * 1.1, 
+                    feature, color='black', ha='center', va='center', fontsize=10)
+        
+        plt.grid(alpha=0.5)
+        plt.show()
+        self.logger.info("Successfully PCA VariAnce plotting")
+        
+    def promo_effect_analysis(self, df):
+        self.logger.info("Starting to Checking promotion effect Analysis")
+        # Filter promo and non-promo data
+        promo_data = df[df['Promo'] == 1]
+        non_promo_data = df[df['Promo'] == 0]
+
+        # 1. Bar Chart: Average Sales, Customers, and Sales per Customer
+        promo_means = promo_data[['Sales', 'Customers', 'Sales_per_Customer']].mean()
+        non_promo_means = non_promo_data[['Sales', 'Customers', 'Sales_per_Customer']].mean()
+
+        promo_comparison = pd.DataFrame({'Promo': promo_means, 'Non-Promo': non_promo_means})
+        promo_comparison.plot(kind='bar', figsize=(10, 6), rot=0)
+        plt.title('Average Sales, Customers, and Sales per Customer (Promo vs. Non-Promo)', fontsize=14)
+        plt.ylabel('Average Value', fontsize=12)
+        plt.grid(alpha=0.3)
+        plt.show()
+        self.logger.info("Successfully completing  promotion effect Analysis")
+        return  promo_data, non_promo_data
+    # Box Plot: Promo Effectiveness Across Stores
+    def Promo_Effectiveness_Across_Stores(self, promo_data):
+        self.logger.info("Starting to promotion effectiness Analysis across store")
+        plt.figure(figsize=(12, 6))
+        sns.boxplot(data=promo_data, x='Store', y='Sales', showfliers=False)
+        plt.title('Sales Distribution Across Stores (During Promos)', fontsize=14)
+        plt.ylabel('Sales', fontsize=12)
+        plt.xlabel('Store', fontsize=12)
+        plt.xticks(rotation=90)
+        plt.grid(alpha=0.3)
+        plt.show()
+        self.logger.info("Successfully completing  promotion effectiness Analysis across store")
+    #Heatmap: Promo Performance Across Stores
+    def Promo_Performance_Across_Stores(self, promo_data):
+        self.logger.info("Starting to promotion Performance Analysis across store")
+        store_promo_sales = promo_data.groupby('Store')['Sales'].mean()
+        store_promo_sales = store_promo_sales.reset_index().pivot(index='Store', columns=None, values='Sales')
+
+        plt.figure(figsize=(12, 8))
+        sns.heatmap(store_promo_sales, annot=True, fmt='.1f', cmap='coolwarm', cbar_kws={'label': 'Average Sales'})
+        plt.title('Promo Effectiveness Across Stores', fontsize=14)
+        plt.ylabel('Store', fontsize=12)
+        plt.xlabel('Promo Effectiveness', fontsize=12)
+        plt.show()
+        self.logger.info("Successfully completing  promotion Performance Analysis across store")
+    # Seasonal Promo Analysis (Line Chart)
+    def Seasonal_Promo_Analysis_Line_Chart(self, promo_data, non_promo_data):
+        self.logger.info("Starting plotting Seasonal promotion Analysis")
+        promo_seasonal = promo_data.groupby('Month')['Sales'].mean()
+        non_promo_seasonal = non_promo_data.groupby('Month')['Sales'].mean()
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(promo_seasonal.index, promo_seasonal, marker='o', label='Promo')
+        plt.plot(non_promo_seasonal.index, non_promo_seasonal, marker='o', label='Non-Promo')
+        plt.title('Seasonal Promo Effectiveness', fontsize=14)
+        plt.xlabel('Month', fontsize=12)
+        plt.ylabel('Average Sales', fontsize=12)
+        plt.legend()
+        plt.grid(alpha=0.3)
+        plt.show()
+        self.logger.info("Successfully completing plotting Seasonal promotion Analysis")
+    
+     # Separate data based on store open or closed
+    def separate_by_store_open_close(self, df):
+        self.logger.info("Starting Store open and close Analysis")
+        open_days = df[df['Open'] == 1]
+        closed_days = df[df['Open'] == 0]
+
+        # 1. Average Metrics Comparison
+        avg_open = open_days[['Sales', 'Customers', 'Sales_per_Customer']].mean()
+        avg_closed = closed_days[['Sales', 'Customers', 'Sales_per_Customer']].mean()
+
+        comparison_df = pd.DataFrame({'Open': avg_open, 'Closed': avg_closed})
+        comparison_df.plot(kind='bar', figsize=(10, 6), rot=0)
+        plt.title('Average Metrics: Open vs. Closed Days', fontsize=14)
+        plt.ylabel('Average Value', fontsize=12)
+        plt.grid(alpha=0.3)
+        plt.show()
+        self.logger.info("Successfully completing Store open and close Analysis")
+        return open_days, closed_days
+    # Temporal Trends
+    def Temporal_Trends(self, open_days):
+        self.logger.info("Starting Store open days trend Analysis")
+        # Group by Month to analyze trends
+        monthly_sales = open_days.groupby('Month')['Sales'].mean()
+        monthly_customers = open_days.groupby('Month')['Customers'].mean()
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(monthly_sales.index, monthly_sales, marker='o', label='Sales')
+        plt.plot(monthly_customers.index, monthly_customers, marker='o', label='Customers')
+        plt.title('Monthly Trends: Sales and Customers (Open Days)', fontsize=14)
+        plt.xlabel('Month', fontsize=12)
+        plt.ylabel('Average Value', fontsize=12)
+        plt.legend()
+        plt.grid(alpha=0.3)
+        plt.show()
+        self.logger.info("Successfully completing Store open days trend Analysis")
+    
+    # Heatmap of Store Activity
+    def Heatmap_of_Store_Activity(self, open_days):
+        store_open_sales = open_days.groupby('Store')['Sales'].mean().reset_index()
+        store_open_sales = store_open_sales.pivot(index='Store', columns=None, values='Sales')
+
+        plt.figure(figsize=(12, 8))
+        sns.heatmap(store_open_sales, annot=False, cmap='coolwarm', cbar_kws={'label': 'Average Sales'})
+        plt.title('Customer Behavior Across Stores (Open Days)', fontsize=14)
+        plt.ylabel('Store', fontsize=12)
+        plt.xlabel('Average Sales', fontsize=12)
+        plt.show()
+    # Scatter Plot: Holiday Periods and Behavior on Open Days
+    def Scatter_Plot_Holiday_Behavior_open_days(self, open_days):
+        self.logger.info("Starting Scatter Plot: Holiday Periods and Behavior on Open Days Analysis")
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(data=open_days, x='HolidayPeriod', y='Sales', hue='StateHoliday')
+        plt.title('Impact of Holiday Periods on Sales (Open Days)', fontsize=14)
+        plt.xlabel('Holiday Period', fontsize=12)
+        plt.ylabel('Sales', fontsize=12)
+        plt.legend(title='StateHoliday')
+        plt.grid(alpha=0.3)
+        plt.show()
+        self.logger.info("Successfully completing Scatter Plot: Holiday Periods and Behavior on Open Days Analysis")
