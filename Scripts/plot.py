@@ -417,3 +417,143 @@ class Plot:
         plt.grid(alpha=0.3)
         plt.show()
         self.logger.info("Successfully completing Scatter Plot: Holiday Periods and Behavior on Open Days Analysis")
+    
+     # Identify stores open on all weekdays
+    def Identify_stores_open_all_weekdays(self, df):
+        self.logger.info("Strating  Week day open Stors Analysis")
+        # Filter for weekdays (DayOfWeek 1 to 5) and Open = 1
+        weekdays = df[(df['DayOfWeek'] >= 1) & (df['DayOfWeek'] <= 5) & (df['Open'] == 1)]
+
+        # Group by Store and count unique weekdays
+        weekday_open_counts = weekdays.groupby('Store')['DayOfWeek'].nunique()
+
+        # Stores open all weekdays (1 through 5)
+        stores_open_all_weekdays = weekday_open_counts[weekday_open_counts == 5].index.tolist()
+
+        # Analyze weekend sales
+        # Filter for weekend data (DayOfWeek 6 and 7)
+        weekend = df[(df['DayOfWeek'] >= 6) & (df['DayOfWeek'] <= 7) & (df['Open'] == 1)]
+
+        # Separate weekend data for stores open all weekdays and other stores
+        weekend_sales_all_weekdays = weekend[weekend['Store'].isin(stores_open_all_weekdays)]
+        weekend_sales_other_stores = weekend[~weekend['Store'].isin(stores_open_all_weekdays)]
+
+        # Calculate average weekend sales
+        avg_weekend_sales_all_weekdays = weekend_sales_all_weekdays['Sales'].mean()
+        avg_weekend_sales_other_stores = weekend_sales_other_stores['Sales'].mean()
+
+        # Print results
+        print("Stores open on all weekdays:", stores_open_all_weekdays)
+        print("Average weekend sales (stores open on all weekdays):", avg_weekend_sales_all_weekdays)
+        print("Average weekend sales (other stores):", avg_weekend_sales_other_stores)
+        # Step 3: Plot the results
+        labels = ['Open All Weekdays', 'Other Stores']
+        average_sales = [avg_weekend_sales_all_weekdays, avg_weekend_sales_other_stores]
+
+        plt.figure(figsize=(8, 6))
+        plt.bar(labels, average_sales, color=['teal', 'orange'])
+        plt.xlabel('Store Type')
+        plt.ylabel('Average Weekend Sales')
+        plt.title('Average Weekend Sales Comparison')
+        plt.show()
+        self.logger.info("Successfully Completing Week day open Stors Analysis")
+    
+    # Boxplot of Sales by HolidayPeriod
+    def Boxplot_of_Sales_by_HolidayPeriod(self,df):
+        self.logger.info("Strating  Box Plot sales over Holiday Analysis")
+        plt.figure(figsize=(10,6))
+        sns.boxplot(x='HolidayPeriod', y='Sales', data=df)
+        plt.title('Sales Distribution by Holiday Period')
+        plt.xlabel('Holiday Period')
+        plt.ylabel('Sales')
+        plt.xticks(rotation=45)
+        plt.show()
+        self.logger.info("Successfully Completing Box Plot sales over Holiday Analysis")
+        
+    # Bar plot for mean sales by HolidayPeriod
+    def Bar_plot_mean_sales_by_HolidayPeriod(self,df):
+        self.logger.info("Strating  Bar Plot sales over Holiday Analysis")
+        plt.figure(figsize=(10,6))
+        sns.barplot(x='HolidayPeriod', y='Sales', data=df, estimator='mean')
+        plt.title('Average Sales by Holiday Period')
+        plt.xlabel('Holiday Period')
+        plt.ylabel('Average Sales')
+        plt.xticks(rotation=45)
+        plt.show()
+        self.logger.info("Successfully Completing Bar Plot sales over Holiday Analysis")
+    
+    # Violin plot of Sales by Holiday Period
+    def Violin_plot_Sales_by_HolidayPeriod(self,df):
+        self.logger.info("Strating  Violin Plot sales over Holiday Analysis")
+        plt.figure(figsize=(10,6))
+        sns.violinplot(x='HolidayPeriod', y='Sales', data=df)
+        plt.title('Sales Distribution and Density by Holiday Period')
+        plt.xlabel('Holiday Period')
+        plt.ylabel('Sales')
+        plt.xticks(rotation=45)
+        plt.show()
+        self.logger.info("Successfully Completing Violin Plot sales over Holiday Analysis")
+
+    # Scatter plot for Sales vs. Customers by HolidayPeriod
+    def Scatter_plot_Sales_Customers_by_HolidayPeriod(self,df):
+        self.logger.info("Strating  Scatter Plot Sales vs. Customers by HolidayPeriod Analysis")
+        plt.figure(figsize=(10,6))
+        sns.scatterplot(x='Customers', y='Sales', hue='HolidayPeriod', data=df, palette='Set1')
+        plt.title('Sales vs Customers by Holiday Period')
+        plt.xlabel('Number of Customers')
+        plt.ylabel('Sales')
+        plt.show()
+        self.logger.info("Successfully Completing Scatter Plot Sales vs. Customers by HolidayPeriod Analysis")
+    
+    # Calculate the correlation matrix for the selected columns
+    def heatmap_correlation_analysis(self, df):
+        self.logger.info("Strating heatmap for sales open, customer and promotion Analysis")
+        correlation = df[['Sales', 'Customers', 'Open', 'Promo']].corr()
+
+        # Set up the matplotlib figure
+        plt.figure(figsize=(8,6))
+
+        # Generate a heatmap of the correlation matrix
+        sns.heatmap(correlation, annot=True, cmap='coolwarm', fmt='.2f', linewidths=1, vmin=-1, vmax=1)
+
+        # Title and labels
+        plt.title('Correlation Heatmap of Sales, Customers, Open, and Promo', fontsize=14)
+        plt.show()
+        self.logger.info("Successfully Completing heatmap for sales open, customer and promotion Analysis")
+
+    
+    # Create a sample distance column (e.g., simulate random values for illustration purposes)
+    def Create_sample_distance(self, df):
+        np.random.seed(42)  # For reproducibility
+        df['Distance_to_Competitor'] = np.random.uniform(0, 10, size=len(df))  # Simulated distances
+
+        # Scatter plot of Sales vs Distance to Competitor
+        plt.figure(figsize=(8, 6))
+        sns.scatterplot(data=df, x='Distance_to_Competitor', y='Sales')
+        plt.title('Sales vs Distance to Competitor')
+        plt.xlabel('Distance to Competitor (km)')
+        plt.ylabel('Sales')
+        plt.show()
+        return df 
+    def create_sample_city(self, df):
+        df['City_Center'] = np.random.choice([1, 0], size=len(df))  # 1 for city center, 0 for non-city center
+
+        # Compare sales in city center vs non-city center
+        plt.figure(figsize=(8, 6))
+        sns.boxplot(data=df, x='City_Center', y='Sales')
+        plt.title('Sales Distribution by Store Location Type')
+        plt.xlabel('City Center (1: Yes, 0: No)')
+        plt.ylabel('Sales')
+        plt.show()
+        return df
+    # Correlation between sales and distance for city center stores
+    def city_center_stores(self, df):
+        city_center_stores = df[df['City_Center'] == 1]
+        distance_sales_corr = city_center_stores[['Sales', 'Distance_to_Competitor']].corr()
+        print(distance_sales_corr)
+
+        # Heatmap of correlation for city center stores
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(city_center_stores[['Sales', 'Distance_to_Competitor']].corr(), annot=True, cmap='coolwarm', fmt='.2f')
+        plt.title('Correlation Heatmap for City Center Stores')
+        plt.show()
