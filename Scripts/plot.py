@@ -557,3 +557,31 @@ class Plot:
         sns.heatmap(city_center_stores[['Sales', 'Distance_to_Competitor']].corr(), annot=True, cmap='coolwarm', fmt='.2f')
         plt.title('Correlation Heatmap for City Center Stores')
         plt.show()
+    
+    def plot_feature_importance(self, X_train,feature_importances):
+        self.logger.info("Starting ploting feature Importance")
+        # Visualizing Feature Importance
+        features = X_train.columns
+        plt.figure(figsize=(8, 6))
+        plt.bar(features, feature_importances, color='skyblue')
+        plt.xlabel('Features')
+        plt.ylabel('Importance')
+        plt.title('Feature Importance from RandomForestRegressor')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+        self.logger.info("Successfully ploting feature Importance")
+    def plot_confidence_interval(self,y_train,y_pred, lower_bound, upper_bound):
+        self.logger.info("Starting ploting Predictions with Confidence Intervals")
+        # Visualize Predictions with Confidence Intervals
+        plt.figure(figsize=(10, 6))
+        plt.plot(y_train.values, label='True Values', color='blue')
+        plt.plot(y_pred, label='Predicted Values', color='orange')
+        plt.fill_between(range(len(y_pred)), lower_bound, upper_bound, color='gray', alpha=0.3, label='95% Confidence Interval')
+        plt.xlabel('Index')
+        plt.ylabel('Sales')
+        plt.title('Predictions with 95% Confidence Intervals')
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+        self.logger.info("Successfully ploting Predictions with Confidence Intervals")
