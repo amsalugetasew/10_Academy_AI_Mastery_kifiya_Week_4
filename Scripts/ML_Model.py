@@ -1,5 +1,6 @@
 import logging
 import joblib
+from joblib import Parallel, delayed
 import numpy as np
 from datetime import datetime
 from sklearn.pipeline import Pipeline
@@ -77,15 +78,16 @@ class ML_Model:
             }
         }
 
-    def feature_importance(self,pipeline, X_train, y_train, y_pred):
-        self.logger.info("Start Computing Feature Importance and Confidence Interval Summary")
+    def feature_importance(self,pipeline):
+        self.logger.info("Start Computing Feature Importance")
         # Feature Importance
         # Extract feature importance from the RandomForestRegressor
         regressor = pipeline.named_steps['regressor']  # Accessing the RandomForestRegressor from the pipeline
         feature_importances = regressor.feature_importances_
-        features = X_train.columns
-        
-
+        self.logger.info("Successfully Computing Feature Importance")
+        return feature_importances
+    def bootstraping_confidence_interval(self, X_train, y_train):
+        self.logger.info("Start Computing Confidence Interval Summary")
         #Confidence Interval Estimation
         # Bootstrapping to calculate confidence intervals
         n_bootstraps = 1000  # Number of bootstrap samples
@@ -110,17 +112,36 @@ class ML_Model:
         # Calculate confidence intervals (e.g., 95%)
         lower_bound = np.percentile(bootstrap_preds, 2.5, axis=0)
         upper_bound = np.percentile(bootstrap_preds, 97.5, axis=0)
+        self.logger.info("Successfully Computing Confidence Interval Summary")
+        return lower_bound, upper_bound
+    def bootstraping_confidence_interval(self, X_train, y_train, n_bootstraps=500, sample_size=0.8):
+        # Precompute scaling
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        y_train = y_train.values  # Convert to NumPy if it's a pandas Series
+        
+        def train_bootstrap(i):
+            indices = np.random.choice(len(X_train_scaled), int(len(X_train_scaled) * sample_size), replace=True)
+            X_bootstrap = X_train_scaled[indices]
+            y_bootstrap = y_train[indices]
+            
+            # Train model
+            model = RandomForestRegressor(n_estimators=10, max_depth=5, random_state=42)
+            model.fit(X_bootstrap, y_bootstrap)
+            
+            return model.predict(X_train_scaled)
 
-        # Print Feature Importance and Confidence Interval Summary
-        print("Feature Importances:")
-        for feature, importance in zip(features, feature_importances):
-            print(f"{feature}: {importance:.4f}")
+        # Parallelize the bootstrapping process
+        bootstrap_preds = Parallel(n_jobs=-1)(
+            delayed(train_bootstrap)(i) for i in range(n_bootstraps)
+        )
 
-        print("\nConfidence Intervals (95%):")
-        for i, (pred, low, high) in enumerate(zip(y_pred, lower_bound, upper_bound)):
-            print(f"Prediction {i+1}: {pred:.2f} (95% CI: {low:.2f} - {high:.2f})")
-        self.logger.info("Successfully Computing Feature Importance and Confidence Interval Summary")
-        return feature_importances, lower_bound, upper_bound
+        # Calculate confidence intervals
+        bootstrap_preds = np.array(bootstrap_preds)
+        lower_bound = np.percentile(bootstrap_preds, 2.5, axis=0)
+        upper_bound = np.percentile(bootstrap_preds, 97.5, axis=0)
+        
+        return lower_bound, upper_bound
     def serialize_model(self, pipeline):
         self.logger.info("Starting Serialize the model")
         # Generate a timestamp
