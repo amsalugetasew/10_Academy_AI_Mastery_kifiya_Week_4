@@ -585,3 +585,40 @@ class Plot:
         plt.tight_layout()
         plt.show()
         self.logger.info("Successfully ploting Predictions with Confidence Intervals")
+    def plot_confidence_interval_1(self,confidence_iterval):
+        self.logger.info("Starting ploting Predictions with Confidence Intervals")
+        # Plot
+        plt.figure(figsize=(12, 7))
+
+        # Define colors for each column
+        colors = {
+            "Prediction": "blue",
+            "Lower Bound (95% CI)": "green",
+            "Upper Bound (95% CI)": "orange",
+        }
+
+        # Iterate over columns and plot each line
+        for column, color in colors.items():
+            plt.plot(confidence_iterval.index, confidence_iterval[column], label=column, color=color, marker='o', linestyle='-', markersize=4)
+
+        # Add shaded area for confidence interval
+        plt.fill_between(
+            confidence_iterval.index,
+            confidence_iterval["Lower Bound (95% CI)"],
+            confidence_iterval["Upper Bound (95% CI)"],
+            color="blue",
+            alpha=0.2,
+            label="95% CI Range",
+        )
+
+        # Add labels and legend
+        plt.title("Confidence Interval Plot with Different Colors", fontsize=14)
+        plt.xlabel("Index", fontsize=12)
+        plt.ylabel("Value", fontsize=12)
+        plt.legend(loc="upper left", fontsize=10)
+        plt.grid(True, linestyle="--", alpha=0.6)
+
+        # Show the plot
+        plt.tight_layout()
+        plt.show()
+        self.logger.info("Successfully ploting Predictions with Confidence Intervals")
