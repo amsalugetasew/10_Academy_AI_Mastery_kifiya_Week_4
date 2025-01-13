@@ -86,34 +86,34 @@ class ML_Model:
         feature_importances = regressor.feature_importances_
         self.logger.info("Successfully Computing Feature Importance")
         return feature_importances
-    def bootstraping_confidence_interval(self, X_train, y_train):
-        self.logger.info("Start Computing Confidence Interval Summary")
-        #Confidence Interval Estimation
-        # Bootstrapping to calculate confidence intervals
-        n_bootstraps = 1000  # Number of bootstrap samples
-        bootstrap_preds = np.zeros((n_bootstraps, len(y_train)))
+    # def bootstraping_confidence_interval(self, X_train, y_train):
+    #     self.logger.info("Start Computing Confidence Interval Summary")
+    #     #Confidence Interval Estimation
+    #     # Bootstrapping to calculate confidence intervals
+    #     n_bootstraps = 1000  # Number of bootstrap samples
+    #     bootstrap_preds = np.zeros((n_bootstraps, len(y_train)))
 
-        for i in range(n_bootstraps):
-            # Bootstrap sampling
-            indices = np.random.choice(len(X_train), len(X_train), replace=True)
-            X_bootstrap = X_train.iloc[indices]
-            y_bootstrap = y_train.iloc[indices]
+    #     for i in range(n_bootstraps):
+    #         # Bootstrap sampling
+    #         indices = np.random.choice(len(X_train), len(X_train), replace=True)
+    #         X_bootstrap = X_train.iloc[indices]
+    #         y_bootstrap = y_train.iloc[indices]
             
-            # Train a new pipeline on the bootstrap sample
-            bootstrap_pipeline = Pipeline([
-                ('scaler', StandardScaler()),
-                ('regressor', RandomForestRegressor(random_state=42))
-            ])
-            bootstrap_pipeline.fit(X_bootstrap, y_bootstrap)
+    #         # Train a new pipeline on the bootstrap sample
+    #         bootstrap_pipeline = Pipeline([
+    #             ('scaler', StandardScaler()),
+    #             ('regressor', RandomForestRegressor(random_state=42))
+    #         ])
+    #         bootstrap_pipeline.fit(X_bootstrap, y_bootstrap)
             
-            # Predict on the original data
-            bootstrap_preds[i, :] = bootstrap_pipeline.predict(X_train)
+    #         # Predict on the original data
+    #         bootstrap_preds[i, :] = bootstrap_pipeline.predict(X_train)
 
-        # Calculate confidence intervals (e.g., 95%)
-        lower_bound = np.percentile(bootstrap_preds, 2.5, axis=0)
-        upper_bound = np.percentile(bootstrap_preds, 97.5, axis=0)
-        self.logger.info("Successfully Computing Confidence Interval Summary")
-        return lower_bound, upper_bound
+    #     # Calculate confidence intervals (e.g., 95%)
+    #     lower_bound = np.percentile(bootstrap_preds, 2.5, axis=0)
+    #     upper_bound = np.percentile(bootstrap_preds, 97.5, axis=0)
+    #     self.logger.info("Successfully Computing Confidence Interval Summary")
+    #     return lower_bound, upper_bound
     def bootstraping_confidence_interval(self, X_train, y_train, n_bootstraps=500, sample_size=0.8):
         # Precompute scaling
         scaler = StandardScaler()
