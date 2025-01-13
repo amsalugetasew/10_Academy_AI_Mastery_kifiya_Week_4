@@ -11,3 +11,6 @@ steps 3: Promotion Analysis for checking wheather the promotion has effect or no
 steps 4: Time Series Analysis which used to identify its seasonality effect over sales like holiday, opening week day, non-holiday effect
 steps 5: visulizig every analysis by chart
 
+
+There is developed Saved models under Model folder using algorithms Randome Forest and LSTM for time series sales data for predicting next sales data
+user can load the trained .pkl model files for prediction bu just using my Django code I created with a name of sales_prediction 
