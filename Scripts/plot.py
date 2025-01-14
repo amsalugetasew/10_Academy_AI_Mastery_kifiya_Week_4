@@ -563,9 +563,9 @@ class Plot:
         # Visualizing Feature Importance
         features = X_train.columns
         plt.figure(figsize=(8, 6))
-        plt.bar(features, feature_importances, color='skyblue')
-        plt.xlabel('Features')
-        plt.ylabel('Importance')
+        plt.barh(features, feature_importances, color='skyblue')
+        plt.ylabel('Features')
+        plt.xlabel('Importance')
         plt.title('Feature Importance from RandomForestRegressor')
         plt.xticks(rotation=45)
         plt.tight_layout()
